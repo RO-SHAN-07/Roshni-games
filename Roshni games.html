@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roshni Game - Premium HTML5 Portal</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Custom Styles -->
+    <style>
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a; /* Slate 900 */
+            color: #e2e8f0; /* Slate 200 */
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+        /* Splash Screen */
+        #splash-screen { transition: opacity 0.5s ease-out; }
+        .splash-logo-animation { animation: pulse 2s infinite ease-in-out; }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.9; }
+        }
+
+        /* Game Card Overlay & Favorite Button */
+        .play-icon-overlay { opacity: 0; transition: opacity 0.3s ease-in-out; }
+        .group:hover .play-icon-overlay { opacity: 1; }
+        .fav-btn {
+            opacity: 0.7;
+            transition: all 0.2s ease-in-out;
+        }
+        .group:hover .fav-btn, .fav-btn.favorited {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+        .fav-btn.favorited svg {
+            fill: #ec4899; /* Pink 500 */
+            stroke: #ec4899;
+        }
+
+        /* Performance optimization for filtering */
+        .game-card.hidden { display: none; }
+        .no-scroll { overflow: hidden; }
+
+        /* Welcome message animation */
+        .welcome-fade-out {
+            animation: fadeOut 0.5s ease-out forwards;
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-20px); }
+        }
+    </style>
+</head>
+<body class="bg-slate-900">
+
+    <!-- Splash Screen -->
+    <div id="splash-screen" class="fixed inset-0 bg-slate-900 flex flex-col items-center justify-center z-[100]">
+        <svg class="w-24 h-24 text-white splash-logo-animation" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <radialGradient id="grad1" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                    <stop offset="0%" style="stop-color:rgb(255,107,107);stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:rgb(236,72,153);stop-opacity:1" />
+                </radialGradient>
+            </defs>
+            <path d="M50 5C25.16 5 5 25.16 5 50s20.16 45 45 45 45-20.16 45-45S74.84 5 50 5z" fill="url(#grad1)"/>
+            <path d="M62.6,35.3c-2.3-2.3-5.5-3.8-8.9-3.8H40c-1.1,0-2,0.9-2,2v33c0,1.1,0.9,2,2,2h13.7c6.5,0,11.8-5.3,11.8-11.8 c0-4.6-2.6-8.6-6.5-10.5c1.8-1.5,3-3.8,3-6.4C65.9,40.1,64.7,37.3,62.6,35.3z M53.7,59.5c0,2.1-1.7,3.8-3.8,3.8H42V51.7h7.9 c2.1,0,3.8,1.7,3.8,3.8V59.5z M55.6,43.8c0,2.1-1.7,3.8-3.8,3.8H42V39.5h9.8c2.1,0,3.8,1.7,3.8,3.8V43.8z" fill="white"/>
+        </svg>
+        <h1 class="text-4xl font-extrabold tracking-tight text-white mt-6">Roshni</h1>
+    </div>
+
+    <!-- Main Application Container -->
+    <div id="app-container" class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 opacity-0 transition-opacity duration-500">
+        
+        <!-- Welcome Message -->
+        <div id="welcome-message" class="hidden max-w-4xl mx-auto bg-slate-800 border border-slate-700 rounded-lg p-4 mb-8 flex items-start gap-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-pink-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            <div>
+                <h3 class="font-bold text-lg">Welcome to the new Roshni Game portal!</h3>
+                <p class="text-slate-300 text-sm mt-1">New Feature: You can now save your favorite games! Just click the ❤️ icon on any game to add it to your personal "Favorites" collection.</p>
+            </div>
+            <button id="close-welcome" class="ml-auto text-slate-400 hover:text-white transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <header class="text-center mb-10">
+            <div class="inline-block p-1 bg-gradient-to-br from-pink-500 to-yellow-500 rounded-full mb-4">
+                <div class="bg-slate-900 rounded-full p-2">
+                    <svg class="w-12 h-12 text-white" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M50 5C25.16 5 5 25.16 5 50s20.16 45 45 45 45-20.16 45-45S74.84 5 50 5z" fill="url(#grad1)"/>
+                        <path d="M62.6,35.3c-2.3-2.3-5.5-3.8-8.9-3.8H40c-1.1,0-2,0.9-2,2v33c0,1.1,0.9,2,2,2h13.7c6.5,0,11.8-5.3,11.8-11.8 c0-4.6-2.6-8.6-6.5-10.5c1.8-1.5,3-3.8,3-6.4C65.9,40.1,64.7,37.3,62.6,35.3z M53.7,59.5c0,2.1-1.7,3.8-3.8,3.8H42V51.7h7.9 c2.1,0,3.8,1.7,3.8,3.8V59.5z M55.6,43.8c0,2.1-1.7,3.8-3.8,3.8H42V39.5h9.8c2.1,0,3.8,1.7,3.8,3.8V43.8z" fill="white"/>
+                    </svg>
+                </div>
+            </div>
+             <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 text-transparent bg-clip-text">
+                Roshni Game
+            </h1>
+            <p class="text-slate-400 max-w-2xl mx-auto mb-8 mt-2">
+                Your portal to over 100+ fully playable HTML5 games. No installation required.
+            </p>
+            <div class="relative max-w-lg mx-auto">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <svg class="w-5 h-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                    </svg>
+                </div>
+                <input type="text" id="searchInput" placeholder="Search for a game..." class="w-full bg-slate-800 border border-slate-700 rounded-full py-3 pl-11 pr-10 focus:ring-2 focus:ring-pink-500 focus:outline-none transition">
+                <button id="clearSearchBtn" class="absolute inset-y-0 right-0 pr-3 flex items-center hidden">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400 hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <nav class="flex flex-wrap justify-center gap-2 sm:gap-4 mb-6" id="categoryFilters"></nav>
+        
+        <div id="recently-played-container" class="max-w-4xl mx-auto mb-10 hidden">
+             <h2 class="text-center text-lg font-semibold text-slate-300 mb-4">Recently Played</h2>
+             <div id="recently-played-grid" class="flex flex-wrap justify-center gap-4"></div>
+        </div>
+
+        <main id="gameGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6"></main>
+        
+        <div id="noResults" class="text-center py-20 hidden col-span-full">
+            <h3 class="text-2xl font-bold text-slate-300">No Games Found</h3>
+            <p class="text-slate-400 mt-2">Try adjusting your search or filter.</p>
+        </div>
+    </div>
+
+    <div id="gameModal" class="fixed inset-0 bg-black bg-opacity-80 flex-col items-center justify-center hidden z-50 p-4">
+        <div class="w-full max-w-7xl bg-slate-900 rounded-lg shadow-2xl flex flex-col" style="height: 95vh;">
+            <div class="flex items-center justify-between p-3 border-b border-slate-700 flex-shrink-0">
+                <h3 id="gameTitle" class="text-lg font-semibold truncate">Loading Game...</h3>
+                <div class="flex items-center gap-4">
+                     <button id="fullscreenBtn" title="Toggle Fullscreen" class="p-2 rounded-full hover:bg-slate-700 transition">
+                        <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" /></svg>
+                    </button>
+                    <button id="closeModalBtn" title="Close Game" class="p-2 rounded-full hover:bg-red-500/20 transition text-red-400">
+                        <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="w-full flex-grow bg-black"><iframe id="gameFrame" class="w-full h-full border-0" allowfullscreen></iframe></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // All games are from Famobi, which allows embedding.
+            const games = [
+                { id: "garden-bloom", title: "Garden Bloom", category: "Puzzle", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/GardenBloomTeaser.jpg?v=0.2-65f00e93" },
+                { id: "solitaire-story-tripeaks-3", title: "Solitaire Story 3", category: "Cards", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/SolitaireStoryTripeaks3Teaser.jpg?v=0.2-65f00e93" },
+                { id: "moto-x3m", title: "Moto X3M", category: "Racing", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/MotoX3mTeaser.jpg?v=0.2-65f00e93" },
+                { id: "om-nom-run", title: "Om Nom: Run", category: "Arcade", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/OmNomRunTeaser.jpg?v=0.2-65f00e93" },
+                { id: "bubble-shooter-hd", title: "Bubble Shooter HD", category: "Puzzle", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/BubbleShooterHdTeaser.jpg?v=0.2-65f00e93" },
+                { id: "table-tennis-world-tour", title: "Table Tennis Tour", category: "Sports", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/TableTennisWorldTourTeaser.jpg?v=0.2-65f00e93" },
+                { id: "mahjong-connect-new", title: "Mahjong Connect", category: "Puzzle", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/MahjongConnectNewTeaser.jpg?v=0.2-65f00e93" },
+                { id: "pizza-clicker-tycoon", title: "Pizza Clicker", category: "Strategy", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/PizzaClickerTycoonTeaser.jpg?v=0.2-65f00e93" },
+                { id: "ludo-classic", title: "Ludo Classic", category: "Board", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/LudoClassicTeaser.jpg?v=0.2-65f00e93" },
+                { id: "8-ball-pool", title: "8 Ball Pool", category: "Sports", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/8BallBilliardsClassicTeaser.jpg?v=0.2-65f00e93" },
+                { id: "gold-miner-tom", title: "Gold Miner Tom", category: "Arcade", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/GoldMinerTomTeaser.jpg?v=0.2-65f00e93" },
+                { id: "element-blocks", title: "Element Blocks", category: "Puzzle", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/ElementBlocksTeaser.jpg?v=0.2-65f00e93" },
+                { id: "archery-world-tour", title: "Archery World Tour", category: "Sports", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/ArcheryWorldTourTeaser.jpg?v=0.2-65f00e93" },
+                { id: "cannon-balls-3d", title: "Cannon Balls 3D", category: "Action", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/CannonBalls3dTeaser.jpg?v=0.2-65f00e93" },
+                { id: "knife-rain", title: "Knife Rain", category: "Arcade", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/KnifeRainTeaser.jpg?v=0.2-65f00e93" },
+                { id: "stack-smash", title: "Stack Smash", category: "Arcade", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/StackSmashTeaser.jpg?v=0.2-65f00e93" },
+                { id: "zoo-pinball", title: "Zoo Pinball", category: "Arcade", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/ZooPinballTeaser.jpg?v=0.2-65f00e93" },
+                { id: "totemia-cursed-marbles", title: "Totemia", category: "Puzzle", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/TotemiaCursedMarblesTeaser.jpg?v=0.2-65f00e93" },
+                { id: "tower-crash-3d", title: "Tower Crash 3D", category: "Strategy", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/TowerCrash3dTeaser.jpg?v=0.2-65f00e93" },
+                { id: "penalty-challenge", title: "Penalty Challenge", category: "Sports", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/PenaltyChallengeTeaser.jpg?v=0.2-65f00e93" },
+                { id: "solitaire-classic", title: "Solitaire Classic", category: "Cards", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/SolitaireClassicTeaser.jpg?v=0.2-65f00e93" },
+                { id: "color-pixel-art-classic", title: "Color Pixel Art", category: "Puzzle", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/ColorPixelArtClassicTeaser.jpg?v=0.2-65f00e93" },
+                { id: "highway-rider-extreme", title: "Highway Rider", category: "Racing", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/HighwayRiderExtremeTeaser.jpg?v=0.2-65f00e93" },
+                { id: "sling-drift", title: "Sling Drift", category: "Arcade", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/SlingDriftTeaser.jpg?v=0.2-65f00e93" },
+                { id: "onet-connect-classic", title: "Onet Connect", category: "Puzzle", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/OnetConnectClassicTeaser.jpg?v=0.2-65f00e93" },
+                { id: "farming-fun", title: "Farming Fun", category: "Strategy", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/FarmingFunTeaser.jpg?v=0.2-65f00e93" },
+                { id: "basketball-frvr", title: "Basketball FRVR", category: "Sports", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/BasketballFrvrTeaser.jpg?v=0.2-65f00e93" },
+                { id: "drift-boss", title: "Drift Boss", category: "Racing", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/DriftBossTeaser.jpg?v=0.2-65f00e93" },
+                { id: "chess-classic", title: "Chess Classic", category: "Board", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/ChessClassicTeaser.jpg?v=0.2-65f00e93" },
+                { id: "jewelish-blitz", title: "Jewelish Blitz", category: "Puzzle", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/JewelishBlitzTeaser.jpg?v=0.2-65f00e93" },
+                { id: "the-little-giant", title: "The Little Giant", category: "Strategy", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/TheLittleGiantTeaser.jpg?v=0.2-65f00e93" },
+                { id: "yummy-donut-factory", title: "Donut Factory", category: "Strategy", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/YummyDonutFactoryTeaser.jpg?v=0.2-65f00e93" },
+                { id: "crazy-carts", title: "Crazy Carts", category: "Racing", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/CrazyCartsTeaser.jpg?v=0.2-65f00e93" },
+                { id: "cut-the-rope", title: "Cut the Rope", category: "Puzzle", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/CutTheRopeTeaser.jpg?v=0.2-65f00e93" },
+                { id: "bubble-woods", title: "Bubble Woods", category: "Puzzle", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/BubbleWoodsTeaser.jpg?v=0.2-65f00e93" },
+                { id: "smart-bubbles", title: "Smarty Bubbles", category: "Puzzle", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/SmartyBubblesTeaser.jpg?v=0.2-65f00e93" },
+                { id: "jewel-exploder", title: "Jewel Exploder", category: "Puzzle", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/JewelExploderTeaser.jpg?v=0.2-65f00e93" },
+                { id: "mahjong-world", title: "Mahjong World", category: "Puzzle", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/MahjongWorldTeaser.jpg?v=0.2-65f00e93" },
+                { id: "knife-hit", title: "Knife Hit", category: "Arcade", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/KnifeHitTeaser.jpg?v=0.2-65f00e93" },
+                { id: "endless-truck", title: "Endless Truck", category: "Racing", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/EndlessTruckTeaser.jpg?v=0.2-65f00e93" },
+                { id: "3d-free-kick", title: "3D Free Kick", category: "Sports", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/3dFreeKickTeaser.jpg?v=0.2-65f00e93" },
+                { id: "tap-the-frog", title: "Tap The Frog", category: "Arcade", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/TapTheFrogTeaser.jpg?v=0.2-65f00e93" },
+                { id: "word-search", title: "Word Search", category: "Puzzle", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/WordSearchTeaser.jpg?v=0.2-65f00e93" },
+                { id: "sudoku-classic", title: "Sudoku Classic", category: "Board", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/SudokuClassicTeaser.jpg?v=0.2-65f00e93" },
+                { id: "yummy-super-pizza", title: "Super Pizza", category: "Strategy", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/YummySuperPizzaTeaser.jpg?v=0.2-65f00e93" },
+                { id: "fidget-spinner", title: "Fidget Spinner", category: "Arcade", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/FidgetSpinnerHighScoreTeaser.jpg?v=0.2-65f00e93" },
+                { id: "moto-x3m-pool-party", title: "Moto X3M Pool Party", category: "Racing", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/MotoX3mPoolPartyTeaser.jpg?v=0.2-65f00e93" },
+                { id: "world-cup-penalty", title: "World Cup Penalty", category: "Sports", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/WorldCupPenaltyTeaser.jpg?v=0.2-65f00e93" },
+                { id: "spider-solitaire", title: "Spider Solitaire", category: "Cards", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/SpiderSolitaireTeaser.jpg?v=0.2-65f00e93" },
+                { id: "zombie-buster", title: "Zombie Buster", category: "Action", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/ZombieBusterTeaser.jpg?v=0.2-65f00e93" },
+                { id: "car-crossing", title: "Car Crossing", category: "Arcade", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/CarCrossingTeaser.jpg?v=0.2-65f00e93" },
+                { id: "king-of-thieves", title: "King of Thieves", category: "Action", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/KingOfThievesTeaser.jpg?v=0.2-65f00e93" },
+                { id: "kiba-kumba-jungle-chaos", title: "Kiba & Kumba", category: "Arcade", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/KibaKumbaJungleChaosTeaser.jpg?v=0.2-65f00e93" },
+                { id: "om-nom-bubbles", title: "Om Nom Bubbles", category: "Puzzle", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/OmNomBubblesTeaser.jpg?v=0.2-65f00e93" },
+                { id: "street-race-fury", title: "Street Race Fury", category: "Racing", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/StreetRaceFuryTeaser.jpg?v=0.2-65f00e93" },
+                { id: "football-tricks", title: "Football Tricks", category: "Sports", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/FootballTricksTeaser.jpg?v=0.2-65f00e93" },
+                { id: "tribal-wars", title: "Tribal Wars", category: "Strategy", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/TribalWars2Teaser.jpg?v=0.2-65f00e93" },
+                { id: "yummy-taco", title: "Yummy Taco", category: "Strategy", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/YummyTacoTeaser.jpg?v=0.2-65f00e93" },
+                { id: "freecell-solitaire", title: "Freecell Solitaire", category: "Cards", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/FreecellSolitaireTeaser.jpg?v=0.2-65f00e93" },
+                { id: "captain-payback", title: "Captain Payback", category: "Action", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/CaptainPaybackTeaser.jpg?v=0.2-65f00e93" },
+                { id: "block-puzzle", title: "Block Puzzle", category: "Puzzle", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/BlockPuzzleTeaser.jpg?v=0.2-65f00e93" },
+                { id: "backgammon", title: "Backgammon", category: "Board", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/BackgammonClassicTeaser.jpg?v=0.2-65f00e93" },
+                { id: "moto-x3m-winter", title: "Moto X3M Winter", category: "Racing", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/MotoX3mWinterTeaser.jpg?v=0.2-65f00e93" },
+                { id: "smarty-bubbles-2", title: "Smarty Bubbles 2", category: "Puzzle", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/SmartyBubbles2Teaser.jpg?v=0.2-65f00e93" },
+                { id: "3d-bowling", title: "3D Bowling", category: "Sports", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/3dBowlingTeaser.jpg?v=0.2-65f00e93" },
+                { id: "dominoes", title: "Dominoes", category: "Board", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/DominoesClassicTeaser.jpg?v=0.2-65f00e93" },
+                { id: "cowboy-run", title: "Cowboy Run", category: "Arcade", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/CowboyRunTeaser.jpg?v=0.2-65f00e93" },
+                { id: "bubble-charms", title: "Bubble Charms", category: "Puzzle", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/BubbleCharmsTeaser.jpg?v=0.2-65f00e93" },
+                { id: "burnin-rubber", title: "Burnin' Rubber", category: "Racing", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/BurninRubberTeaser.jpg?v=0.2-65f00e93" },
+                { id: "3d-darts", title: "3D Darts", category: "Sports", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/3dDartsTeaser.jpg?v=0.2-65f00e93" },
+                { id: "gin-rummy", title: "Gin Rummy", category: "Cards", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/GinRummyClassicTeaser.jpg?v=0.2-65f00e93" },
+                { id: "empire-online", title: "Empire Online", category: "Strategy", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/GoodgameEmpireTeaser.jpg?v=0.2-65f00e93" },
+                { id: "animal-quiz", title: "Animal Quiz", category: "Puzzle", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/AnimalQuizTeaser.jpg?v=0.2-65f00e93" },
+                { id: "stack-tower", title: "Stack Tower", category: "Arcade", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/StackTowerClassicTeaser.jpg?v=0.2-65f00e93" },
+                { id: "kick-cup", title: "Kick Cup", category: "Sports", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/KickCup2014Teaser.jpg?v=0.2-65f00e93" },
+                { id: "mahjong-classic", title: "Mahjong Classic", category: "Puzzle", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/MahjongClassicTeaser.jpg?v=0.2-65f00e93" },
+                { id: "big-farm", title: "Big Farm", category: "Strategy", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/GoodgameBigFarmTeaser.jpg?v=0.2-65f00e93" },
+                { id: "city-dunk", title: "City Dunk", category: "Sports", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/CityDunkTeaser.jpg?v=0.2-65f00e93" },
+                { id: "klondike-solitaire", title: "Klondike Solitaire", category: "Cards", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/KlondikeSolitaireTeaser.jpg?v=0.2-65f00e93" },
+                { id: "crossword-puzzle", title: "Crossword Puzzle", category: "Puzzle", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/CrosswordPuzzleTeaser.jpg?v=0.2-65f00e93" },
+                { id: "zombie-disaster", title: "Zombie Disaster", category: "Action", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/ZombieDisasterTeaser.jpg?v=0.2-65f00e93" },
+                { id: "parking-fury", title: "Parking Fury", category: "Racing", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/ParkingFuryTeaser.jpg?v=0.2-65f00e93" },
+                { id: "4-in-a-row", title: "4 in a Row", category: "Board", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/4InARowTeaser.jpg?v=0.2-65f00e93" },
+                { id: "word-bird", title: "Word Bird", category: "Puzzle", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/WordBirdTeaser.jpg?v=0.2-65f00e93" },
+                { id: "yatzy-classic", title: "Yatzy Classic", category: "Board", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/YatzyClassicTeaser.jpg?v=0.2-65f00e93" },
+                { id: "street-ball-star", title: "Street Ball Star", category: "Sports", thumb: "https://img.cdn.famobi.com/portal/html5games/images/tmp/StreetBallStarTeaser.jpg?v=0.2-65f00e93" },
+            ].map(g => ({...g, url: `https://play.famobi.com/${g.id}`}));
+
+            // DOM Elements
+            const elements = {
+                splashScreen: document.getElementById('splash-screen'),
+                appContainer: document.getElementById('app-container'),
+                gameGrid: document.getElementById('gameGrid'),
+                searchInput: document.getElementById('searchInput'),
+                clearSearchBtn: document.getElementById('clearSearchBtn'),
+                categoryFilters: document.getElementById('categoryFilters'),
+                gameModal: document.getElementById('gameModal'),
+                closeModalBtn: document.getElementById('closeModalBtn'),
+                gameFrame: document.getElementById('gameFrame'),
+                gameTitle: document.getElementById('gameTitle'),
+                fullscreenBtn: document.getElementById('fullscreenBtn'),
+                noResults: document.getElementById('noResults'),
+                welcomeMessage: document.getElementById('welcome-message'),
+                closeWelcome: document.getElementById('close-welcome'),
+                recentlyPlayedContainer: document.getElementById('recently-played-container'),
+                recentlyPlayedGrid: document.getElementById('recently-played-grid'),
+            };
+
+            // App State
+            let state = {
+                currentCategory: 'All',
+                favorites: JSON.parse(localStorage.getItem('roshniFavorites')) || [],
+                recentlyPlayed: JSON.parse(localStorage.getItem('roshniRecentlyPlayed')) || [],
+                allGameCards: [],
+            };
+
+            // --- INITIALIZATION ---
+            function initApp() {
+                // Show welcome message if not dismissed
+                if (localStorage.getItem('roshniWelcomeDismissed') !== 'true') {
+                    elements.welcomeMessage.classList.remove('hidden');
+                }
+                
+                setTimeout(() => {
+                    elements.splashScreen.style.opacity = '0';
+                    elements.appContainer.style.opacity = '1';
+                    setTimeout(() => elements.splashScreen.style.display = 'none', 500);
+                }, 1500);
+
+                createGameCards();
+                renderCategories();
+                renderRecentlyPlayed();
+                filterAndDisplayGames();
+                addEventListeners();
+            }
+
+            // --- DOM MANIPULATION & RENDERING ---
+            function createGameCards() {
+                const fragment = document.createDocumentFragment();
+                games.forEach(game => {
+                    const card = document.createElement('div');
+                    card.className = 'game-card group relative rounded-lg overflow-hidden shadow-lg transform hover:-translate-y-1 transition-all duration-300 bg-slate-800';
+                    card.dataset.id = game.id;
+                    card.dataset.title = game.title.toLowerCase();
+                    card.dataset.category = game.category;
+                    
+                    const isFavorited = state.favorites.includes(game.id);
+                    
+                    card.innerHTML = `
+                        <img src="${game.thumb}" alt="${game.title}" class="w-full h-40 object-cover" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/300x200/0f172a/e2e8f0?text=${encodeURIComponent(game.title)}';">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                        <h3 class="absolute bottom-0 left-0 p-3 text-sm font-semibold tracking-wide">${game.title}</h3>
+                        <button class="fav-btn absolute top-2 right-2 p-1.5 bg-black/40 rounded-full ${isFavorited ? 'favorited' : ''}" data-game-id="${game.id}">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.5l1.318-1.182a4.5 4.5 0 116.364 6.364L12 20.25l-7.682-7.682a4.5 4.5 0 010-6.364z" />
+                            </svg>
+                        </button>
+                        <div class="absolute inset-0 bg-black/50 flex items-center justify-center play-icon-overlay cursor-pointer" data-play-id="${game.id}">
+                            <svg class="w-16 h-16 text-white drop-shadow-lg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm14.024-.983a1.125 1.125 0 010 1.966l-5.603 3.113A1.125 1.125 0 019 15.113V8.887c0-.857.921-1.4 1.671-.983l5.603 3.113z" clip-rule="evenodd" /></svg>
+                        </div>`;
+                    fragment.appendChild(card);
+                });
+                elements.gameGrid.appendChild(fragment);
+                state.allGameCards = Array.from(elements.gameGrid.children);
+            }
+
+            function renderCategories() {
+                const categories = ['All', 'Favorites', ...new Set(games.map(g => g.category))].sort((a,b) => {
+                    if (a === 'All') return -1; if (b === 'All') return 1;
+                    if (a === 'Favorites') return -1; if (b === 'Favorites') return 1;
+                    return a.localeCompare(b);
+                });
+
+                elements.categoryFilters.innerHTML = categories.map(category => `
+                    <button class="category-btn px-4 py-2 rounded-full text-sm font-semibold transition ${state.currentCategory === category ? 'bg-pink-600 text-white shadow-md' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}" data-category="${category}">
+                        ${category}
+                    </button>
+                `).join('');
+            }
+            
+            function renderRecentlyPlayed() {
+                if (state.recentlyPlayed.length === 0) {
+                    elements.recentlyPlayedContainer.classList.add('hidden');
+                    return;
+                }
+                
+                elements.recentlyPlayedContainer.classList.remove('hidden');
+                elements.recentlyPlayedGrid.innerHTML = state.recentlyPlayed
+                    .map(gameId => games.find(g => g.id === gameId))
+                    .filter(Boolean) // Filter out any games that might no longer exist
+                    .map(game => `
+                    <div class="relative group rounded-lg overflow-hidden shadow-md cursor-pointer transform hover:-translate-y-1 transition-all duration-200 w-32" onclick="openGameById('${game.id}')">
+                         <img src="${game.thumb}" alt="${game.title}" class="w-full h-20 object-cover bg-slate-800" loading="lazy">
+                         <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                         <p class="absolute bottom-1 left-0 right-0 text-center text-xs font-semibold p-1 truncate">${game.title}</p>
+                    </div>`).join('');
+            }
+
+            // --- EVENT HANDLING ---
+            function addEventListeners() {
+                elements.searchInput.addEventListener('input', handleSearch);
+                elements.clearSearchBtn.addEventListener('click', clearSearch);
+                elements.categoryFilters.addEventListener('click', handleCategoryFilter);
+                elements.gameGrid.addEventListener('click', handleGameGridClick);
+                elements.closeModalBtn.addEventListener('click', closeGame);
+                elements.fullscreenBtn.addEventListener('click', toggleFullscreen);
+                elements.closeWelcome.addEventListener('click', dismissWelcome);
+                window.addEventListener('keydown', e => e.key === 'Escape' && closeGame());
+            }
+
+            function handleSearch(e) {
+                elements.clearSearchBtn.classList.toggle('hidden', e.target.value === '');
+                filterAndDisplayGames();
+            }
+
+            function clearSearch() {
+                elements.searchInput.value = '';
+                elements.clearSearchBtn.classList.add('hidden');
+                filterAndDisplayGames();
+            }
+
+            function handleCategoryFilter(e) {
+                if (!e.target.matches('.category-btn')) return;
+                state.currentCategory = e.target.dataset.category;
+                renderCategories(); // Re-render to update active state
+                filterAndDisplayGames();
+            }
+
+            function handleGameGridClick(e) {
+                const favBtn = e.target.closest('.fav-btn');
+                const playOverlay = e.target.closest('[data-play-id]');
+                
+                if (favBtn) {
+                    toggleFavorite(favBtn.dataset.gameId);
+                } else if (playOverlay) {
+                    openGameById(playOverlay.dataset.playId);
+                }
+            }
+
+            function dismissWelcome() {
+                localStorage.setItem('roshniWelcomeDismissed', 'true');
+                elements.welcomeMessage.classList.add('welcome-fade-out');
+                setTimeout(() => elements.welcomeMessage.classList.add('hidden'), 500);
+            }
+
+            // --- CORE LOGIC ---
+            function filterAndDisplayGames() {
+                const searchTerm = elements.searchInput.value.toLowerCase();
+                let visibleCount = 0;
+
+                state.allGameCards.forEach(card => {
+                    const isFavoriteCategory = state.currentCategory === 'Favorites';
+                    const matchesCategory = isFavoriteCategory ? state.favorites.includes(card.dataset.id) : (state.currentCategory === 'All' || card.dataset.category === state.currentCategory);
+                    const matchesSearch = card.dataset.title.includes(searchTerm);
+                    
+                    if (matchesCategory && matchesSearch) {
+                        card.classList.remove('hidden');
+                        visibleCount++;
+                    } else {
+                        card.classList.add('hidden');
+                    }
+                });
+
+                elements.noResults.classList.toggle('hidden', visibleCount > 0);
+            }
+
+            window.openGameById = function(gameId) {
+                const game = games.find(g => g.id === gameId);
+                if (!game) return;
+                
+                // Update recently played
+                state.recentlyPlayed = [gameId, ...state.recentlyPlayed.filter(id => id !== gameId)].slice(0, 6);
+                localStorage.setItem('roshniRecentlyPlayed', JSON.stringify(state.recentlyPlayed));
+                renderRecentlyPlayed();
+
+                elements.gameTitle.textContent = game.title;
+                elements.gameFrame.src = game.url;
+                elements.gameModal.classList.remove('hidden');
+                elements.gameModal.classList.add('flex');
+                document.body.classList.add('no-scroll');
+            }
+
+            function closeGame() {
+                elements.gameModal.classList.add('hidden');
+                elements.gameModal.classList.remove('flex');
+                elements.gameFrame.src = 'about:blank';
+                document.body.classList.remove('no-scroll');
+                if (document.fullscreenElement) document.exitFullscreen();
+            }
+
+            function toggleFullscreen() {
+                if (!document.fullscreenElement) {
+                    elements.gameModal.requestFullscreen().catch(err => console.error(err));
+                } else {
+                    document.exitFullscreen();
+                }
+            }
+
+            function toggleFavorite(gameId) {
+                const gameIndex = state.favorites.indexOf(gameId);
+                if (gameIndex > -1) {
+                    state.favorites.splice(gameIndex, 1);
+                } else {
+                    state.favorites.push(gameId);
+                }
+                localStorage.setItem('roshniFavorites', JSON.stringify(state.favorites));
+
+                // Update UI
+                const favBtn = document.querySelector(`.fav-btn[data-game-id="${gameId}"]`);
+                if(favBtn) favBtn.classList.toggle('favorited');
+
+                // Refresh view if in Favorites category
+                if (state.currentCategory === 'Favorites') filterAndDisplayGames();
+            }
+
+            initApp();
+        });
+    </script>
+</body>
+</html>
+
